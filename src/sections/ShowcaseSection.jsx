@@ -47,36 +47,27 @@ const AppShowcase = () => {
     <div id="work" ref={sectionRef} className="app-showcase">
       <div className="w-full">
         <div className="showcaselayout">
-          <div ref={rydeRef} className="first-project-wrapper">
-            <div className="image-wrapper">
-              <img src="/images/project1.png" alt="Ryde App Interface" />
-            </div>
-            <div className="text-content">
-              <h2>
-              From concept to code — we create websites that work beautifully and convert effectively
-              </h2>
-              <p className="text-white-50 md:text-xl">
-              Smart, scalable websites designed to grow with your business
-              </p>
-            </div>
-          </div>
-
-          <div className="project-list-wrapper overflow-hidden">
-            <div className="project bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-6" ref={libraryRef}>
-              <div className="image-wrapper">
+          <div className="project-list-wrapper w-full flex flex-col md:flex-row gap-8 md:gap-10 items-stretch">
+            <div className="project flex-1 min-w-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-0 flex flex-col min-h-[320px]" ref={libraryRef}>
+              <div className="w-full aspect-[16/9] min-h-[180px] md:min-h-[220px] overflow-hidden rounded-t-xl">
                 <img
                   src="/images/project2.png"
                   alt="Library Management Platform"
+                  className="w-full h-full object-cover"
                 />
               </div>
-              <h2>Shoot sharp. Sell smart</h2>
+              <div className="flex-1 flex flex-col justify-end p-6">
+                <h2 className="text-white text-xl font-semibold break-words">Shoot sharp. Sell smart</h2>
+              </div>
             </div>
 
-            <div className="project bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-6" ref={ycDirectoryRef}>
-              <div className="image-wrapper">
-                <img src="/images/project3.png" alt="YC Directory App" />
+            <div className="project flex-1 min-w-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-0 flex flex-col min-h-[320px]" ref={ycDirectoryRef}>
+              <div className="w-full aspect-[16/9] min-h-[180px] md:min-h-[220px] overflow-hidden rounded-t-xl">
+                <img src="/images/project3.png" alt="YC Directory App" className="w-full h-full object-cover" />
               </div>
-              <h2>Bring ideas to life in 3D</h2>
+              <div className="flex-1 flex flex-col justify-end p-6">
+                <h2 className="text-white text-xl font-semibold break-words">Bring ideas to life in 3D</h2>
+              </div>
             </div>
           </div>
         </div>

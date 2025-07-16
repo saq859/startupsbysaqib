@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 
 const defaultTestimonial = {
@@ -6,7 +7,6 @@ const defaultTestimonial = {
   feedback: "Amazing work! The website exceeded my expectations.",
   date: "June 18, 2021",
   rating: 5,
-  // img: "/images/person.png", // Remove image
 };
 
 const StarRating = ({ rating }) => (
@@ -34,27 +34,61 @@ const StarRating = ({ rating }) => (
 );
 
 const TestimonialsSection = () => {
-  const [testimonials, setTestimonials] = useState([
-    defaultTestimonial,
-    {
-      name: "Amina Jamil",
-      feedback: "Awesome! The product photography is really amazing..",
-      date: "July 2, 2023",
-      rating: 4,
-      // img: "/images/client1.png",
-    },
-    {
-      name: "Hanan Jamil",
-      feedback: "Fire!! Their 3d ads are really appreciated..",
-      date: "August 10, 2023",
-      rating: 5,
-      // img: "/images/client2.png",
-    },
-  ]);
+  const [testimonials, setTestimonials] = useState([]);
   const [form, setForm] = useState({ name: "", feedback: "", date: "", rating: 5 });
   const [submitted, setSubmitted] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
   const [direction, setDirection] = useState(0); // 1 for right, -1 for left
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await axios.get("http://localhost:5000/testimonials");
+        if (res.data.length === 0) {
+          setTestimonials([
+            defaultTestimonial,
+            {
+              name: "Amina Jamil",
+              feedback: "Awesome! The product photography is really amazing..",
+              date: "July 2, 2023",
+              rating: 4,
+            },
+            {
+              name: "Hanan Jamil",
+              feedback: "Fire!! Their 3d ads are really appreciated..",
+              date: "August 10, 2023",
+              rating: 5,
+            },
+          ]);
+        } else {
+          setTestimonials(res.data);
+        }
+      } catch (err) {
+        setError("Failed to load testimonials.");
+        setTestimonials([
+          defaultTestimonial,
+          {
+            name: "Amina Jamil",
+            feedback: "Awesome! The product photography is really amazing..",
+            date: "July 2, 2023",
+            rating: 4,
+          },
+          {
+            name: "Hanan Jamil",
+            feedback: "Fire!! Their 3d ads are really appreciated..",
+            date: "August 10, 2023",
+            rating: 5,
+          },
+        ]);
+      }
+      setLoading(false);
+    };
+    fetchTestimonials();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -64,17 +98,25 @@ const TestimonialsSection = () => {
     setForm((prev) => ({ ...prev, rating }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (form.name && form.feedback) {
       const today = new Date();
       const dateStr = today.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-      setTestimonials([{ ...form, date: dateStr, rating: form.rating }, ...testimonials]);
-      setForm({ name: "", feedback: "", date: "", rating: 5 });
-      setSubmitted(true);
-      setDirection(1);
-      setActiveIdx(0);
-      setTimeout(() => setSubmitted(false), 2000);
+      try {
+        const res = await axios.post("http://localhost:5000/testimonials", {
+          ...form,
+          date: dateStr,
+        });
+        setTestimonials([res.data, ...testimonials]);
+        setForm({ name: "", feedback: "", date: "", rating: 5 });
+        setSubmitted(true);
+        setDirection(1);
+        setActiveIdx(0);
+        setTimeout(() => setSubmitted(false), 2000);
+      } catch (err) {
+        setError("Failed to submit testimonial.");
+      }
     }
   };
 
@@ -113,6 +155,7 @@ const TestimonialsSection = () => {
             </svg>
           </span>
         </div>
+        {error && <div className="text-red-400 text-center mb-2">{error}</div>}
         <form onSubmit={handleSubmit} className="bg-white/10 backdrop-blur rounded-lg p-6 mb-10 shadow flex flex-col gap-4">
           <input
             type="text"
@@ -157,28 +200,32 @@ const TestimonialsSection = () => {
         <div className="relative flex flex-col items-center justify-center min-h-[320px]">
           {/* Testimonial Block with Animation */}
           <div className="w-full flex justify-center" style={{ position: 'relative', height: 300 }}>
-            <AnimatePresence initial={false} custom={direction}>
-              <motion.div
-                key={activeIdx}
-                custom={direction}
-                initial={{ x: direction === 1 ? 300 : -300, opacity: 0, position: 'absolute', width: '100%' }}
-                animate={{ x: 0, opacity: 1, position: 'absolute', width: '100%' }}
-                exit={{ x: direction === 1 ? -300 : 300, opacity: 0, position: 'absolute', width: '100%' }}
-                transition={{ duration: 0.5, ease: [0.43, 0.13, 0.23, 0.96] }}
-                className="relative rounded-lg shadow p-8 flex flex-col items-center w-full max-w-xl mx-auto overflow-hidden backdrop-blur-lg bg-white/10 border border-white/30"
-                style={{ minHeight: '260px', boxShadow: '0 4px 32px 0 rgba(80, 0, 120, 0.10)' }}
-              >
-                {/* Gradient corners */}
-                <div className="absolute top-0 left-0 w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-transparent opacity-60 pointer-events-none z-10" />
-                <div className="absolute bottom-0 right-0 w-24 h-24 rounded-full bg-gradient-to-tl from-purple-400 to-transparent opacity-60 pointer-events-none z-10" />
-                {/* Star Rating */}
-                <StarRating rating={testimonials[activeIdx].rating} />
-                {/* No image */}
-                <h3 className="text-xl font-bold text-white mb-1 text-center">{testimonials[activeIdx].name}</h3>
-                <p className="text-sm text-gray-200 mb-4 text-center">{testimonials[activeIdx].date}</p>
-                <p className="text-lg text-white text-center font-medium mb-2">{testimonials[activeIdx].feedback}</p>
-              </motion.div>
-            </AnimatePresence>
+            {loading ? (
+              <div className="text-white text-center">Loading testimonials...</div>
+            ) : (
+              <AnimatePresence initial={false} custom={direction}>
+                <motion.div
+                  key={activeIdx}
+                  custom={direction}
+                  initial={{ x: direction === 1 ? 300 : -300, opacity: 0, position: 'absolute', width: '100%' }}
+                  animate={{ x: 0, opacity: 1, position: 'absolute', width: '100%' }}
+                  exit={{ x: direction === 1 ? -300 : 300, opacity: 0, position: 'absolute', width: '100%' }}
+                  transition={{ duration: 0.5, ease: [0.43, 0.13, 0.23, 0.96] }}
+                  className="relative rounded-lg shadow p-8 flex flex-col items-center w-full max-w-xl mx-auto overflow-hidden backdrop-blur-lg bg-white/10 border border-white/30"
+                  style={{ minHeight: '260px', boxShadow: '0 4px 32px 0 rgba(80, 0, 120, 0.10)' }}
+                >
+                  {/* Gradient corners */}
+                  <div className="absolute top-0 left-0 w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-transparent opacity-60 pointer-events-none z-10" />
+                  <div className="absolute bottom-0 right-0 w-24 h-24 rounded-full bg-gradient-to-tl from-purple-400 to-transparent opacity-60 pointer-events-none z-10" />
+                  {/* Star Rating */}
+                  <StarRating rating={testimonials[activeIdx]?.rating} />
+                  {/* No image */}
+                  <h3 className="text-xl font-bold text-white mb-1 text-center">{testimonials[activeIdx]?.name}</h3>
+                  <p className="text-sm text-gray-200 mb-4 text-center">{testimonials[activeIdx]?.date}</p>
+                  <p className="text-lg text-white text-center font-medium mb-2">{testimonials[activeIdx]?.feedback}</p>
+                </motion.div>
+              </AnimatePresence>
+            )}
           </div>
           {/* Pagination Dots */}
           <div className="flex justify-center gap-2 mt-6">

@@ -55,7 +55,7 @@ const NavBar = () => {
 
           {/* Mobile Hamburger Button */}
           <button 
-            className="lg:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1 z-50"
+            className="lg:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1 z-[10000]"
             onClick={toggleMobileMenu}
           >
             <span className={`block w-6 h-0.5 bg-white transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
@@ -72,14 +72,22 @@ const NavBar = () => {
         </div>
       </header>
 
-      {/* Full Screen Mobile Navigation Menu */}
-      <div className={`lg:hidden fixed inset-0 z-40 transition-all duration-500 ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
-        {/* Glassmorphism Background */}
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-xl"></div>
+      {/* Full Screen Mobile Navigation Menu - Slides from Right */}
+      <div className={`lg:hidden fixed top-0 right-0 w-full h-full z-[9999] transition-all duration-500 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        {/* Black Background */}
+        <div className="absolute inset-0 bg-black"></div>
+        
+        {/* Close Button */}
+        <button 
+          className="absolute top-6 right-6 text-white text-4xl font-bold z-[10001] hover:text-purple-400 transition-colors duration-300"
+          onClick={closeMobileMenu}
+        >
+          ×
+        </button>
         
         {/* Menu Content */}
-        <div className="relative z-10 flex flex-col justify-center items-center h-full">
-          <nav className="text-center">
+        <div className="relative z-10 flex flex-col justify-center items-center h-full px-6">
+          <nav className="text-center w-full">
             <ul className="space-y-8">
               {navLinks.map(({ link, name }) => (
                 <li key={name}>
@@ -105,6 +113,14 @@ const NavBar = () => {
           </nav>
         </div>
       </div>
+
+      {/* Overlay for closing menu when clicking outside */}
+      {isMobileMenuOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-[9998]"
+          onClick={closeMobileMenu}
+        ></div>
+      )}
     </>
   );
 }
