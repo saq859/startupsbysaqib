@@ -19,6 +19,7 @@ const testimonialSchema = new mongoose.Schema({
   date: String,
   rating: Number,
   approved: { type: Boolean, default: true },
+  authorEmail: String, // NEW FIELD
 });
 
 const Testimonial = mongoose.model('Testimonial', testimonialSchema);
@@ -31,10 +32,26 @@ app.get('/testimonials', async (req, res) => {
 
 // Add a new testimonial (approved by default)
 app.post('/testimonials', async (req, res) => {
-  const { name, feedback, date, rating } = req.body;
-  const testimonial = new Testimonial({ name, feedback, date, rating, approved: true });
+  const { name, feedback, date, rating, authorEmail } = req.body;
+  const testimonial = new Testimonial({ name, feedback, date, rating, approved: true, authorEmail });
   await testimonial.save();
   res.status(201).json(testimonial);
+});
+
+app.delete('/testimonials/:id', async (req, res) => {
+  const { authorEmail } = req.body; // frontend se bhejna hoga
+  const testimonial = await Testimonial.findById(req.params.id);
+
+  if (!testimonial) {
+    return res.status(404).json({ error: 'Testimonial not found' });
+  }
+
+  if (testimonial.authorEmail !== authorEmail) {
+    return res.status(403).json({ error: 'You can only delete your own testimonial' });
+  }
+
+  await testimonial.deleteOne();
+  res.json({ message: 'Testimonial deleted' });
 });
 
 const PORT = 5000;
