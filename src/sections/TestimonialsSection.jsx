@@ -2,12 +2,26 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 
-const defaultTestimonial = {
+const defaultTestimonials = [
+  {
   name: "Esther Howard",
   feedback: "Amazing work! The website exceeded my expectations.",
   date: "June 18, 2021",
   rating: 5,
-};
+  },
+  {
+    name: "Amina Jamil",
+    feedback: "Awesome! The product photography is really amazing..",
+    date: "July 2, 2023",
+    rating: 4,
+  },
+  {
+    name: "Hanan Jamil",
+    feedback: "Fire!! Their 3d ads are really appreciated..",
+    date: "August 10, 2023",
+    rating: 5,
+  }
+];
 
 const StarRating = ({ rating }) => (
   <div className="flex justify-center mb-2">
@@ -34,12 +48,12 @@ const StarRating = ({ rating }) => (
 );
 
 const TestimonialsSection = () => {
-  const [testimonials, setTestimonials] = useState([]);
+  const [testimonials, setTestimonials] = useState(defaultTestimonials);
   const [form, setForm] = useState({ name: "", feedback: "", date: "", rating: 5 });
   const [submitted, setSubmitted] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
   const [direction, setDirection] = useState(0); // 1 for right, -1 for left
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -47,43 +61,17 @@ const TestimonialsSection = () => {
       setLoading(true);
       setError("");
       try {
-        const res = await axios.get("http://localhost:5000/testimonials");
-        if (res.data.length === 0) {
-          setTestimonials([
-            defaultTestimonial,
-            {
-              name: "Amina Jamil",
-              feedback: "Awesome! The product photography is really amazing..",
-              date: "July 2, 2023",
-              rating: 4,
-            },
-            {
-              name: "Hanan Jamil",
-              feedback: "Fire!! Their 3d ads are really appreciated..",
-              date: "August 10, 2023",
-              rating: 5,
-            },
-          ]);
-        } else {
+        const BACKEND_URL = import.meta.env.PROD 
+          ? "https://your-backend-url.com" // Replace with your actual backend URL
+          : "http://localhost:5000";
+          
+        const res = await axios.get(`${BACKEND_URL}/testimonials`);
+        if (res.data.length > 0) {
           setTestimonials(res.data);
         }
       } catch (err) {
-        setError("Failed to load testimonials.");
-        setTestimonials([
-          defaultTestimonial,
-          {
-            name: "Amina Jamil",
-            feedback: "Awesome! The product photography is really amazing..",
-            date: "July 2, 2023",
-            rating: 4,
-          },
-          {
-            name: "Hanan Jamil",
-            feedback: "Fire!! Their 3d ads are really appreciated..",
-            date: "August 10, 2023",
-            rating: 5,
-          },
-        ]);
+        console.log("Using default testimonials");
+        // Keep using defaultTestimonials if backend fails
       }
       setLoading(false);
     };
@@ -103,19 +91,37 @@ const TestimonialsSection = () => {
     if (form.name && form.feedback) {
       const today = new Date();
       const dateStr = today.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+      
       try {
-        const res = await axios.post("http://localhost:5000/testimonials", {
+        const BACKEND_URL = import.meta.env.PROD 
+          ? "https://your-backend-url.com" // Will update this when we deploy backend
+          : "http://localhost:5000";
+
+        // Try to submit to backend
+      try {
+          const res = await axios.post(`${BACKEND_URL}/testimonials`, {
           ...form,
           date: dateStr,
         });
         setTestimonials([res.data, ...testimonials]);
-        setForm({ name: "", feedback: "", date: "", rating: 5 });
-        setSubmitted(true);
-        setDirection(1);
-        setActiveIdx(0);
-        setTimeout(() => setSubmitted(false), 2000);
+        } catch (err) {
+          // If backend fails, just add locally
+          const newTestimonial = {
+            ...form,
+            date: dateStr,
+          };
+          setTestimonials([newTestimonial, ...testimonials]);
+        }
+
+        // Reset form and show success message
+      setForm({ name: "", feedback: "", date: "", rating: 5 });
+      setSubmitted(true);
+      setDirection(1);
+      setActiveIdx(0);
+      setTimeout(() => setSubmitted(false), 2000);
       } catch (err) {
-        setError("Failed to submit testimonial.");
+        setError("Failed to submit testimonial. Please try again later.");
+        setTimeout(() => setError(""), 3000);
       }
     }
   };
@@ -203,28 +209,28 @@ const TestimonialsSection = () => {
             {loading ? (
               <div className="text-white text-center">Loading testimonials...</div>
             ) : (
-              <AnimatePresence initial={false} custom={direction}>
-                <motion.div
-                  key={activeIdx}
-                  custom={direction}
-                  initial={{ x: direction === 1 ? 300 : -300, opacity: 0, position: 'absolute', width: '100%' }}
-                  animate={{ x: 0, opacity: 1, position: 'absolute', width: '100%' }}
-                  exit={{ x: direction === 1 ? -300 : 300, opacity: 0, position: 'absolute', width: '100%' }}
-                  transition={{ duration: 0.5, ease: [0.43, 0.13, 0.23, 0.96] }}
-                  className="relative rounded-lg shadow p-8 flex flex-col items-center w-full max-w-xl mx-auto overflow-hidden backdrop-blur-lg bg-white/10 border border-white/30"
-                  style={{ minHeight: '260px', boxShadow: '0 4px 32px 0 rgba(80, 0, 120, 0.10)' }}
-                >
-                  {/* Gradient corners */}
-                  <div className="absolute top-0 left-0 w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-transparent opacity-60 pointer-events-none z-10" />
-                  <div className="absolute bottom-0 right-0 w-24 h-24 rounded-full bg-gradient-to-tl from-purple-400 to-transparent opacity-60 pointer-events-none z-10" />
-                  {/* Star Rating */}
+            <AnimatePresence initial={false} custom={direction}>
+              <motion.div
+                key={activeIdx}
+                custom={direction}
+                initial={{ x: direction === 1 ? 300 : -300, opacity: 0, position: 'absolute', width: '100%' }}
+                animate={{ x: 0, opacity: 1, position: 'absolute', width: '100%' }}
+                exit={{ x: direction === 1 ? -300 : 300, opacity: 0, position: 'absolute', width: '100%' }}
+                transition={{ duration: 0.5, ease: [0.43, 0.13, 0.23, 0.96] }}
+                className="relative rounded-lg shadow p-8 flex flex-col items-center w-full max-w-xl mx-auto overflow-hidden backdrop-blur-lg bg-white/10 border border-white/30"
+                style={{ minHeight: '260px', boxShadow: '0 4px 32px 0 rgba(80, 0, 120, 0.10)' }}
+              >
+                {/* Gradient corners */}
+                <div className="absolute top-0 left-0 w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-transparent opacity-60 pointer-events-none z-10" />
+                <div className="absolute bottom-0 right-0 w-24 h-24 rounded-full bg-gradient-to-tl from-purple-400 to-transparent opacity-60 pointer-events-none z-10" />
+                {/* Star Rating */}
                   <StarRating rating={testimonials[activeIdx]?.rating} />
-                  {/* No image */}
+                {/* No image */}
                   <h3 className="text-xl font-bold text-white mb-1 text-center">{testimonials[activeIdx]?.name}</h3>
                   <p className="text-sm text-gray-200 mb-4 text-center">{testimonials[activeIdx]?.date}</p>
                   <p className="text-lg text-white text-center font-medium mb-2">{testimonials[activeIdx]?.feedback}</p>
-                </motion.div>
-              </AnimatePresence>
+              </motion.div>
+            </AnimatePresence>
             )}
           </div>
           {/* Pagination Dots */}
